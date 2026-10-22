@@ -1,0 +1,17 @@
+@startuml
+skinparam componentStyle rectangle
+
+title Диаграмма компонентов
+
+[Генератор заявок] as Source
+rectangle "АСУЗ\n(Диспетчер постановки +\nДиспетчер выбора + Буфер)" as ASUZ
+[Прибор] as Worker
+
+queue "Kafka" as Kafka1
+queue "Kafka" as Kafka2
+
+Source --> Kafka1 : 1. Отправка заявки
+Kafka1 --> ASUZ : 2. Запись в буфер
+ASUZ --> Kafka2 : 3. Передача пакета
+Kafka2 --> Worker : 4. Обработка
+@enduml

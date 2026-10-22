@@ -27,3 +27,7 @@
 ### Flowchart с дорожками
 
 ![Flowchart](docs/diagrams/Swimlane/swimlane.svg)
+
+### Диаграмма компонентов
+
+![Components](docs/diagrams/Component/component.svg)
