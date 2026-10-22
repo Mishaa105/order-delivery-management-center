@@ -1,0 +1,55 @@
+@startuml
+
+title Сиквенс-диаграмма
+
+actor Generator as "Order Generator"
+queue "Kafka: raw-orders" as RawQueue
+participant PlacementDispatcher as "Placement Dispatcher"
+participant Buffer as "Buffer"
+participant SelectionDispatcher as "Selection Dispatcher"
+queue "Kafka: dispatch-batch" as BatchQueue
+participant OrderBatchKafkaConsumer as "Worker Consumer"
+participant Worker as "Worker (Прибор)"
+
+== Расшифровка кодов варианта ==
+note over Generator, Worker
+  1. Закон генерации (ИЗ1): пуассоновское распределение.
+  2. Постановка в буфея: (Д1ОО1): отказ заявке, стоящей под указателем (выбивание старой заявки новой по кольцевому указателю).
+  3. Выбор заявки из буфера (Д2Б5):  — заявки выбираются по приоритету источника
+  4. Постановка на прибор (Д2П1): Прибор выбирается последовательным перебором, начиная с самого приоритетного
+end note
+
+== Жизненный цикл системы ==
+
+Generator -> RawQueue: Генерация Order 1 (пуассоновское распределение)
+RawQueue -> PlacementDispatcher: Consume Order 1
+PlacementDispatcher -> Buffer: isFull()?
+Buffer --> PlacementDispatcher: false (Буфер не заполнен)
+PlacementDispatcher -> Buffer: addOrder(order1)
+Buffer --> PlacementDispatcher: true (Успешно добавлено)
+
+Generator -> RawQueue: Генерация Order 2 (Буфер полон)
+RawQueue -> PlacementDispatcher: Consume Order 2
+PlacementDispatcher -> Buffer: isFull()?
+Buffer --> PlacementDispatcher: true (Буфер переполнен!)
+alt Д1ОО1 (Отказ и замещение по указателю)
+    PlacementDispatcher -> PlacementDispatcher: reject(order) [Обработка отказа]
+    PlacementDispatcher -> Buffer: addToBuffer(order) [Замещение по кольцевому указателю]
+end
+
+... Момент освобождения прибора ...
+SelectionDispatcher -> Buffer: getOrders() (Пакетная выборка)
+Buffer --> SelectionDispatcher: List<Order> (Пакет заявок)
+SelectionDispatcher -> BatchQueue: sendBatch(List<Order>)
+BatchQueue -> OrderBatchKafkaConsumer: Consume Batch
+
+OrderBatchKafkaConsumer -> Worker: processBatch(batch)
+alt Краевой кейс: Прибор занят обработкой предыдущего пакета
+    Worker --> OrderBatchKafkaConsumer: Прибор занят
+    Note over OrderBatchKafkaConsumer, Worker: Пакет ожидает в очереди конвейера
+    OrderBatchKafkaConsumer -> Worker: повторный вызов processBatch(batch) сразу по освобождении
+end
+
+Worker -> Worker: Симуляция обработки (Cлучайное и подчиняется равномерному закону)
+Worker --> OrderBatchKafkaConsumer: COMPLETED (Успешно обработано)
+@enduml

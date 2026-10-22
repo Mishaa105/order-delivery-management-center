@@ -39,3 +39,7 @@
 ![Class-managment](docs/diagrams/class/order-management-service/order-management-service-class.svg)
 
 ![Class-worker](docs/diagrams/class/worker-service/worker-service-class.svg)
+
+### Sequence-диаграмма
+
+![Sequence](docs/diagrams/sequence/sequence.svg)
