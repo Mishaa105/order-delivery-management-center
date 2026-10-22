@@ -1,0 +1,63 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+title Диаграмма классов — Микросервис АСУЗ (order-management-service)
+
+'Это будет record
+class Order 
+{
+    - id: Long
+    - sourceId: String
+    - timestamp: LocalDateTime
+    - data: String
+}
+
+class Buffer 
+{
+    - capacity: int
+    - queue: List<Order>
+    + addOrder(order: Order): boolean
+    + removeOrder(): Order
+    + getOrders(): List<Order>
+    + isFull(): boolean
+}
+
+class SelectionDispatcher
+{
+    - buffer: Buffer
+    - batch: List<Order>
+    - producer: OrderBatchKafkaProducer
+    + addToBatch(order: Order): void
+    + sendBatchToProducer(batch: List<Order>): void
+}
+
+class PlacementDispatcher
+{
+    - buffer: Buffer
+    + reject(order: Order): void
+    + addToBuffer(order: Order): void
+}
+
+class OrderKafkaConsumer 
+{
+    - placementDispatcher: PlacementDispatcher
+    + consume(order: Order): void
+}
+
+class OrderBatchKafkaProducer 
+{
+    - kafkaTemplate: KafkaTemplate<String, List<Order>>
+    + sendBatch(batch: List<Order>): void
+}
+
+OrderKafkaConsumer --> PlacementDispatcher : вызывает диспетчер постановки и передает заявку
+PlacementDispatcher --> Buffer : управляет буфером
+SelectionDispatcher --> Buffer : читает из буфера
+SelectionDispatcher --> OrderBatchKafkaProducer : отправляет пакет
+
+PlacementDispatcher ..> Order : принимает и обрабатывает
+SelectionDispatcher ..> Order : группирует в пакет
+Buffer o-- Order : содержит список заявок
+OrderBatchKafkaProducer ..> Order : сериализует список
+
+@enduml

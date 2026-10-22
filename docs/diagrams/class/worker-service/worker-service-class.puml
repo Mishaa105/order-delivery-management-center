@@ -1,0 +1,38 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+title Диаграмма классов — Микросервис прибора (order-worker-service)
+
+'Это будет record
+class Order 
+{
+    - id: Long
+    - sourceId: String
+    - timestamp: LocalDateTime
+    - data: String
+}
+
+enum OrderStatus 
+{
+    COMPLETED
+    FAILED
+}
+
+class Worker
+{
+    - workerId : long
+    + processBatch(batch: List<Order>): OrderStatus
+}
+
+class OrderBatchKafkaConsumer 
+{
+    - worker: Worker
+    + consume(batch: List<Order>): void
+}
+
+OrderBatchKafkaConsumer --> Worker : передает пакет на обработку
+Worker ..> OrderStatus : определяет статус
+Worker ..> Order : обрабатывает заявки в пакете
+OrderBatchKafkaConsumer ..> Order : десериализует список
+
+@enduml

@@ -1,0 +1,30 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+title Диаграмма классов — Микросервис генератора (источника) (order-generator-service)
+
+'Это будет record
+class Order 
+{
+    - id: Long
+    - sourceId: String
+    - timestamp: LocalDateTime
+    - data: String
+}
+
+class OrderGenerator 
+{
+    - producer: OrderKafkaProducer
+    + generateAndSend(): void
+}
+
+class OrderKafkaProducer 
+{
+    - kafkaTemplate: KafkaTemplate<String, Order>
+    + sendOrder(order: Order): void
+}
+
+OrderGenerator --> OrderKafkaProducer : хранит ссылку
+OrderGenerator ..> Order : создает объект
+OrderKafkaProducer ..> Order : сериализует и отправляет в order-management-service
+@enduml

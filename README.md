@@ -26,8 +26,16 @@
 
 ### Flowchart с дорожками
 
-![Flowchart](docs/diagrams/Swimlane/swimlane.svg)
+![Flowchart](docs/diagrams/swimlane/swimlane.svg)
 
 ### Диаграмма компонентов
 
-![Components](docs/diagrams/Component/component.svg)
+![Components](docs/diagrams/component/component.svg)
+
+### Диаграммы классов 
+
+![Class-generator](docs/diagrams/class/order-generator-service/order-generator-service-class.svg)
+
+![Class-managment](docs/diagrams/class/order-management-service/order-management-service-class.svg)
+
+![Class-worker](docs/diagrams/class/worker-service/worker-service-class.svg)
