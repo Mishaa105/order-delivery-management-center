@@ -18,19 +18,26 @@ enum OrderStatus
     FAILED
 }
 
+class WorkerDispatcher
+{
+    + processBatch(batch: List<Order>): void
+    + selectFreeWorker(): Worker
+}
+
 class Worker
 {
     - workerId : long
-    + processBatch(batch: List<Order>): OrderStatus
+    + processOrder(order: Order): OrderStatus
 }
 
 class OrderBatchKafkaConsumer 
 {
-    - worker: Worker
+    - workerDispatcher: WorkerDispatcher
     + consume(batch: List<Order>): void
 }
 
-OrderBatchKafkaConsumer --> Worker : передает пакет на обработку
+OrderBatchKafkaConsumer --> WorkerDispatcher : передает пакет на обработку
+WorkerDispatcher --> Worker : Выбирает прибор и передает ему Order
 Worker ..> OrderStatus : определяет статус
 Worker ..> Order : обрабатывает заявки в пакете
 OrderBatchKafkaConsumer ..> Order : десериализует список
